@@ -77,5 +77,7 @@ dependencies {
     implementation ("androidx.compose.material:material:1.6.4")
     implementation ("com.google.maps.android:maps-compose:4.3.3")
 
+    //Splash API
+    implementation ("androidx.core:core-splashscreen:1.0.1")
 
 }
