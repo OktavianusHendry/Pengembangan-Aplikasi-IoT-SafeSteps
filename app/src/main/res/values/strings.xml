@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">IoTtest</string>
+    <string name="title_activity_location_screen">LocationScreen</string>
+</resources>
