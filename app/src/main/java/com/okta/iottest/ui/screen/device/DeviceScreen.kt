@@ -1,8 +1,6 @@
-package com.okta.iottest.ui.screen.home
+package com.okta.iottest.ui.screen.device
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,17 +8,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,15 +19,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +38,7 @@ import com.okta.iottest.ui.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun HomeScreen(
+fun DeviceScreen(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ){
@@ -71,9 +56,9 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            if (currentRoute != Screen.DetailReward.route) { //Change
+//            if (currentRoute != Screen.DetailReward.route) { //Change
                 BottomBar(navController)
-            }
+//            }
         },
     ) { innerPadding ->
         Column(
@@ -121,9 +106,9 @@ fun HomeScreen(
                     .align(CenterHorizontally),
 
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add") // Add this line
+                Icon(painterResource(id = R.drawable.scan_icon2), contentDescription = "Add") // Add this line
                 Spacer(Modifier.width(8.dp))
-                Text(text = "Add Device")
+                Text(text = "Scan New Device")
             }
             Spacer(modifier = Modifier.padding(bottom = 24.dp))
         }

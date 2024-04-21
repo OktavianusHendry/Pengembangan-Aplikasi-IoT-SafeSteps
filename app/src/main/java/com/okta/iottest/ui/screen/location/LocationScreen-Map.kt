@@ -55,6 +55,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -73,7 +75,7 @@ import kotlinx.coroutines.launch
 @Preview
 @Composable
 fun MapLocationScreen(
-//    navController: NavHostController = rememberNavController(),
+    navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }

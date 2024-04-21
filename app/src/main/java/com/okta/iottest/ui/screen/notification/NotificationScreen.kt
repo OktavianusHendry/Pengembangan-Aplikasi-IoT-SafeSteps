@@ -58,9 +58,9 @@ fun NotificationScreen(
             )
         },
         bottomBar = {
-            if (currentRoute != Screen.DetailReward.route) { //Change
+//            if (currentRoute != Screen.DetailReward.route) { //Change
                 BottomBar(navController)
-            }
+//            }
         },
     ) { innerPadding ->
         Column(
