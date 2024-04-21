@@ -62,6 +62,7 @@ dependencies {
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.7")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
+    implementation("com.google.android.material:material:1.11.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -76,6 +77,7 @@ dependencies {
     implementation ("androidx.navigation:navigation-compose:2.6.0")
     implementation ("androidx.compose.material:material:1.6.4")
     implementation ("com.google.maps.android:maps-compose:4.3.3")
+    implementation ("com.google.android.material:compose-theme-adapter:1.0.0")
 
     //Splash API
     implementation ("androidx.core:core-splashscreen:1.0.1")
