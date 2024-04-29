@@ -22,6 +22,7 @@ import com.okta.iottest.ui.screen.notification.NotificationScreen
 import com.okta.iottest.ui.screen.profile.ProfileScreen
 import com.okta.iottest.ui.screen.profile.accsecurity.AccountAndSecurityScreen
 import com.okta.iottest.ui.screen.profile.termscondition.TermsAndConditionScreen
+import com.okta.iottest.ui.screen.welcome.WelcomeScreen
 import com.okta.iottest.ui.theme.IoTtestTheme
 
 class MainActivity : ComponentActivity() {
@@ -66,25 +67,12 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.TermsAndCondition.route){
                             TermsAndConditionScreen(navController)
                         }
+                        composable(Screen.Welcome.route){
+                            WelcomeScreen()
+                        }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    IoTtestTheme {
-        Greeting("Android")
     }
 }

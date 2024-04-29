@@ -138,6 +138,15 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable {
+                                navController.navigate(Screen.AccountAndSecurity.route) {
+                                    popUpTo(Screen.Profile.route) {
+                                        saveState = true
+                                    }
+                                    restoreState = true
+                                    launchSingleTop = true
+                                }
+                            },
                     ) {
                         Icon(
                             painter = rememberVectorPainter(image = Icons.Outlined.AccountCircle),
@@ -148,22 +157,21 @@ fun ProfileScreen(
                             textAlign = TextAlign.Start,
                             modifier = modifier
                                 .padding(start = 8.dp)
-                                .weight(0.9f)
-                                .clickable {
-                                    navController.navigate(Screen.AccountAndSecurity.route) {
-                                        popUpTo(Screen.Profile.route) {
-                                            saveState = true
-                                        }
-                                        restoreState = true
-                                        launchSingleTop = true
-                                    }
-                                           },
+                                .weight(0.9f),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             ),
                         )
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            navController.navigate(Screen.AccountAndSecurity.route) {
+                                popUpTo(Screen.Profile.route) {
+                                    saveState = true
+                                }
+                                restoreState = true
+                                launchSingleTop = true
+                            }
+                        }) {
                             Icon(
                                 Icons.Filled.KeyboardArrowRight,
                                 contentDescription = "Continue",
@@ -184,6 +192,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable { /*TODO*/ },
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_mode_night_24),
@@ -194,8 +203,7 @@ fun ProfileScreen(
                             textAlign = TextAlign.Start,
                             modifier = modifier
                                 .padding(start = 8.dp)
-                                .weight(0.9f)
-                                .clickable { /*TODO*/ },
+                                .weight(0.9f),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -222,6 +230,10 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable {
+                                val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+                                context.startActivity(intent)
+                            },
                     ){
                         Icon(
                             painter = painterResource(id = R.drawable.global),
@@ -231,17 +243,16 @@ fun ProfileScreen(
                             text = "Language",
                             modifier = modifier
                                 .weight(0.9f)
-                                .padding(start = 8.dp)
-                                .clickable {
-                                    val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
-                                    context.startActivity(intent)
-                                },
+                                .padding(start = 8.dp),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             ),
                         )
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+                            context.startActivity(intent)
+                        }) {
                             Icon(
                                 Icons.Filled.KeyboardArrowRight,
                                 contentDescription = "Continue",
@@ -261,6 +272,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable { /*TODO*/ },
                     ){
                         Icon(
                             painter = painterResource(id = R.drawable.outline_live_help_24),
@@ -270,8 +282,7 @@ fun ProfileScreen(
                             text = "Help Center",
                             modifier = modifier
                                 .padding(start = 8.dp)
-                                .weight(0.9f)
-                                .clickable { /*TODO*/ },
+                                .weight(0.9f),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -297,6 +308,15 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable {
+                                navController.navigate(Screen.TermsAndCondition.route) {
+                                    popUpTo(Screen.Profile.route) {
+                                        saveState = true
+                                    }
+                                    restoreState = true
+                                    launchSingleTop = true
+                                }
+                            },
                     ){
                         Icon(
                             painter = painterResource(id = R.drawable.tnc_icon),
@@ -306,22 +326,21 @@ fun ProfileScreen(
                             text = "Terms and Condition",
                             modifier = modifier
                                 .padding(start = 8.dp)
-                                .weight(0.9f)
-                                .clickable {
-                                    navController.navigate(Screen.TermsAndCondition.route) {
-                                        popUpTo(Screen.Profile.route) {
-                                            saveState = true
-                                        }
-                                        restoreState = true
-                                        launchSingleTop = true
-                                    }
-                                },
+                                .weight(0.9f),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             ),
                         )
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            navController.navigate(Screen.TermsAndCondition.route) {
+                                popUpTo(Screen.Profile.route) {
+                                    saveState = true
+                                }
+                                restoreState = true
+                                launchSingleTop = true
+                            }
+                        }) {
                             Icon(
                                 Icons.Filled.KeyboardArrowRight,
                                 contentDescription = "Continue",
@@ -341,6 +360,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
                         modifier = modifier.padding(vertical = 4.dp)
+                            .clickable {},
                     ){
                         Icon(
                             painter = rememberVectorPainter(image = Icons.Outlined.Star),
@@ -350,8 +370,7 @@ fun ProfileScreen(
                             text = "Rate Us",
                             modifier = modifier
                                 .padding(start = 8.dp)
-                                .weight(0.9f)
-                                .clickable {},
+                                .weight(0.9f),
                             style = TextStyle(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp

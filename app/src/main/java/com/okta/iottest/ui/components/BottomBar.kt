@@ -66,7 +66,7 @@ fun BottomBar(
                 screen = Screen.Profile
             ),
         )
-        Log.d("currentRoute", currentRoute.toString())
+
         navigationItems.map { item ->
             NavigationBarItem(
                 icon = {
