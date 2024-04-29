@@ -2,6 +2,7 @@ package com.okta.iottest.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,8 @@ fun PeopleStatusRow(
     distance: String,
     updatedTime: String,
     status: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -41,7 +43,8 @@ fun PeopleStatusRow(
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (status == "fall") ErrorContainer else if (status == "help") SemanticBrown10 else Color.White)
-                .padding(8.dp),
+                .padding(8.dp)
+                .clickable(onClick = { onClick(status ?: "") })  // Make the row clickable,
         ){
             Image(
                 painter = painterResource(profilePicture),
