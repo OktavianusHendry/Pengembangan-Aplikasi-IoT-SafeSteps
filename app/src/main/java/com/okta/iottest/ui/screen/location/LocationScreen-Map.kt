@@ -30,11 +30,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -75,6 +80,7 @@ import com.okta.iottest.ui.theme.Error50
 import com.okta.iottest.ui.theme.ErrorContainer
 import com.okta.iottest.ui.theme.SemanticBrown10
 import androidx.compose.ui.text.font.FontStyle
+import com.okta.iottest.ui.components.NavigationBottomBar
 import com.okta.iottest.ui.theme.OnPrimaryContainer
 import com.okta.iottest.ui.theme.PrimaryContainer
 import kotlinx.coroutines.launch
@@ -92,15 +98,21 @@ fun MapLocationScreen(
 
     // Initialize sheetContent with an empty composable
     val sheetContent = remember { mutableStateOf<@Composable () -> Unit>({}) }
+    val isNewSheetContent = remember { mutableStateOf(false) } // Add this line
 
     // Update sheetContent to be MySheetContent(sheetContent)
     LaunchedEffect(Unit) {
-        sheetContent.value = { MySheetContent(sheetContent) }
+        sheetContent.value = { MySheetContent(sheetContent, isNewSheetContent) } // Pass isNewSheetContent here
+        isNewSheetContent.value = false // And this line
     }
 
     Scaffold(
         bottomBar = {
-            BottomBar(navController)
+            if (isNewSheetContent.value) {
+                NavigationBottomBar(navController)
+            } else {
+                BottomBar(navController)
+            }
         },
     ) { innerPadding ->
         BottomSheetScaffold(
@@ -111,7 +123,26 @@ fun MapLocationScreen(
             sheetPeekHeight = 120.dp,
             sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             sheetElevation = 16.dp,
-//            topBar = if (sheetContent.value() = NewSheetContent()) " a" else "e"
+            topBar = {
+                if (isNewSheetContent.value) {
+                    TopAppBar(
+                        title = { Text("David Hershey's Location", style = MaterialTheme.typography.titleMedium) },
+                        navigationIcon = {
+                            IconButton(onClick = {
+                                sheetContent.value = {
+                                    MySheetContent(
+                                        sheetContent = sheetContent,
+                                        isNewSheetContent = isNewSheetContent
+                                    )
+                                    isNewSheetContent.value = false
+                                }
+                            }) {
+                                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                            }
+                        }
+                    )
+                }
+            }
         ) {
             Column(modifier = Modifier.padding(innerPadding)) {
                 AndroidView(
@@ -194,7 +225,7 @@ fun MapLocationScreen(
 }
 
 @Composable
-fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>) {
+fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>, isNewSheetContent: MutableState<Boolean>) {
     Column(modifier = Modifier.heightIn(min = 100.dp, max = 350.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(
@@ -224,7 +255,7 @@ fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>) {
                     status = "fall",
                     onClick = { status ->
                         // Update the sheetContent state when this row is clicked
-                        sheetContent.value = { NewSheetContent(status) }
+                        sheetContent.value = { NewSheetContent(status, isNewSheetContent) }
                     }
                 )
                 PeopleStatusRow(
@@ -247,7 +278,8 @@ fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>) {
 }
 
 @Composable
-fun NewSheetContent(status: String) {
+fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  { // Modify this line
+    isNewSheetContent.value = true
     // This is the new content that will be shown when a PeopleStatusRow is clicked
     Column(modifier = Modifier.heightIn(min = 100.dp, max = 350.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
