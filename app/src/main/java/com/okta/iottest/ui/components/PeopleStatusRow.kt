@@ -20,19 +20,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.LatLng
 import com.okta.iottest.R
 import com.okta.iottest.ui.theme.ErrorContainer
 import com.okta.iottest.ui.theme.SemanticBrown10
 
 @Composable
 fun PeopleStatusRow(
-    profilePicture : Int,
+    profilePicture: Int,
     name: String,
     distance: String,
     updatedTime: String,
     status: String?,
+    location: LatLng,
     modifier: Modifier = Modifier,
-    onClick: (String) -> Unit = {}
+    onClick: (Int, String, String, String, String, LatLng) -> Unit = {_, _, _, _, _, _ ->}
 ) {
     Row(
         modifier = Modifier
@@ -44,7 +46,7 @@ fun PeopleStatusRow(
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (status == "fall") ErrorContainer else if (status == "help") SemanticBrown10 else Color.White)
                 .padding(8.dp)
-                .clickable(onClick = { onClick(status ?: "") })  // Make the row clickable,
+                .clickable(onClick = { onClick(profilePicture, name, distance, updatedTime, status ?: "", location) })  // Make the row clickable,
         ){
             Image(
                 painter = painterResource(profilePicture),

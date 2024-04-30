@@ -1,5 +1,7 @@
 package com.okta.iottest.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,18 +20,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.android.gms.maps.model.LatLng
 import com.okta.iottest.R
 import com.okta.iottest.ui.navigation.BottomNavigationItem
 import com.okta.iottest.ui.navigation.NavigationItem
@@ -41,7 +46,8 @@ import com.okta.iottest.ui.theme.PrimaryContainer
 @Composable
 fun NavigationBottomBar(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedLocation: MutableState<LatLng>
 ) {
     NavigationBar(
         modifier = modifier
@@ -77,16 +83,9 @@ fun NavigationBottomBar(
                 icon = item.icon,
                 label = item.title,
                 isFirstItem = index == 0,
-                onClick = {
-//                    navController.navigate(item.screen.route) {
-//                        popUpTo(navController.graph.findStartDestination().id) {
-//                            saveState = true
-//                        }
-//                        restoreState = true
-//                        launchSingleTop = true
-//                    }
-                },
-                isLastItem = index == navigationItems.lastIndex // Check if this is the last item
+                onClick = {},
+                isLastItem = index == navigationItems.lastIndex, // Check if this is the last item
+                location = selectedLocation.value
             )
         }
     }
@@ -98,8 +97,10 @@ fun CustomNavigationBarItem(
     label: String,
     isFirstItem: Boolean,
     onClick: () -> Unit,
-    isLastItem: Boolean
+    isLastItem: Boolean,
+    location: LatLng
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .height(64.dp)
@@ -111,7 +112,17 @@ fun CustomNavigationBarItem(
             )
             .clip(RoundedCornerShape(4.dp))
             .background(if (isFirstItem) MaterialTheme.colorScheme.primary else PrimaryContainer)
-            .clickable { onClick() },
+            .clickable {
+                onClick()
+
+                if (label == "Directions") {
+                    val gmmIntentUri = Uri.parse("geo:${location.latitude},${location.longitude}?q=${location.latitude},${location.longitude}")
+                    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                    mapIntent.setPackage("com.google.android.apps.maps")
+                    context.startActivity(mapIntent)
+                }
+
+            },
         contentAlignment = Alignment.Center
     ) {
         Row(

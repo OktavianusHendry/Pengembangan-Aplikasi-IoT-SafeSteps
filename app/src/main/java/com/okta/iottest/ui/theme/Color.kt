@@ -40,3 +40,4 @@ val OutlineVariant = Color(0xFFE7E7E7)
 
 val SemanticRed30 = Color(0xFFE08983)
 val SemanticBrown10 = Color(0xFFF5E5D5)
+val SemanticBrown30 = Color(0xFFE1B082)

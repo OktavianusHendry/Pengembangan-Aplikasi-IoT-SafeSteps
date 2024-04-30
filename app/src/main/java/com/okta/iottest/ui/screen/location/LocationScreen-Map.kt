@@ -1,22 +1,13 @@
 package com.okta.iottest.ui.screen.location
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Rect
-import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,21 +39,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomStart
 import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterVertically
-import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -80,6 +64,9 @@ import com.okta.iottest.ui.theme.Error50
 import com.okta.iottest.ui.theme.ErrorContainer
 import com.okta.iottest.ui.theme.SemanticBrown10
 import androidx.compose.ui.text.font.FontStyle
+import com.google.android.gms.maps.model.Marker
+import com.okta.iottest.model.PeopleData
+import com.okta.iottest.model.PeopleList
 import com.okta.iottest.ui.components.NavigationBottomBar
 import com.okta.iottest.ui.theme.OnPrimaryContainer
 import com.okta.iottest.ui.theme.PrimaryContainer
@@ -94,22 +81,30 @@ fun MapLocationScreen(
 ) {
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     // Initialize sheetContent with an empty composable
     val sheetContent = remember { mutableStateOf<@Composable () -> Unit>({}) }
     val isNewSheetContent = remember { mutableStateOf(false) } // Add this line
+    val selectedName = remember { mutableStateOf("") } // Add this line
+    val selectedLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
     // Update sheetContent to be MySheetContent(sheetContent)
     LaunchedEffect(Unit) {
-        sheetContent.value = { MySheetContent(sheetContent, isNewSheetContent) } // Pass isNewSheetContent here
+        sheetContent.value = {
+            MySheetContent(
+                sheetContent,
+                isNewSheetContent,
+                selectedName,
+                selectedLocation,
+            )
+        } // Pass isNewSheetContent here
         isNewSheetContent.value = false // And this line
     }
 
     Scaffold(
         bottomBar = {
             if (isNewSheetContent.value) {
-                NavigationBottomBar(navController)
+                NavigationBottomBar(navController, selectedLocation = selectedLocation)
             } else {
                 BottomBar(navController)
             }
@@ -126,13 +121,20 @@ fun MapLocationScreen(
             topBar = {
                 if (isNewSheetContent.value) {
                     TopAppBar(
-                        title = { Text("David Hershey's Location", style = MaterialTheme.typography.titleMedium) },
+                        title = {
+                            Text(
+                                "${selectedName.value}'s Location",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = {
                                 sheetContent.value = {
                                     MySheetContent(
                                         sheetContent = sheetContent,
-                                        isNewSheetContent = isNewSheetContent
+                                        isNewSheetContent = isNewSheetContent,
+                                        selectedName = selectedName,
+                                        selectedLocation = selectedLocation
                                     )
                                     isNewSheetContent.value = false
                                 }
@@ -148,64 +150,61 @@ fun MapLocationScreen(
                 AndroidView(
                     factory = { context ->
                         val mapView = MapView(context)
+
                         mapView.getMapAsync { googleMap ->
+                            val markerToPeopleData = mutableMapOf<Marker, PeopleData>()
+                            PeopleList.forEach { data ->
+                                val bitmapWithBorder = createBitmapWithBorder(
+                                    data.profilePicture,
+                                    context,
+                                    1.5f,
+                                    data.statusIcon,
+                                    data.status
+                                )
+                                val markerIcon =
+                                    BitmapDescriptorFactory.fromBitmap(bitmapWithBorder)
 
-                            val scientia = LatLng(-6.255660, 106.615228)
-                            val pradita = LatLng(-6.260826, 106.618281)
-
-                            val bitmapWithBorder = createBitmapWithBorder(
-                                R.drawable.david_hershey_user,
-                                context,
-                                1.5f,
-                                R.drawable.fall_status,
-                                null
-                            )
-                            val markerIcon = BitmapDescriptorFactory.fromBitmap(bitmapWithBorder)
-
-                            val marker1 = googleMap.addMarker(
-                                MarkerOptions()
-                                    .position(scientia)
-                                    .title("David Hershey")
-                                    .snippet("Mark's location")
-                                    .icon(markerIcon)
-                            )
-                            val bitmapWithBorder2 = createBitmapWithBorder(
-                                R.drawable.taylor_user,
-                                context,
-                                1.5f,
-                                R.drawable.fall_status,
-                                "Fall"
-                            )
-                            val markerIcon2 = BitmapDescriptorFactory.fromBitmap(bitmapWithBorder2)
-                            val marker2 = googleMap.addMarker(
-                                MarkerOptions()
-                                    .position(pradita)
-                                    .title("John Doe")
-                                    .snippet("My Location")
-                                    .icon(markerIcon2)
-                            )
+                                val marker = googleMap.addMarker(
+                                    MarkerOptions()
+                                        .position(data.location)
+                                        .title("${data.name} at ${data.location}")
+                                        .snippet(data.status)
+                                        .icon(markerIcon)
+                                )
+                                markerToPeopleData[marker!!] = data
+                            }
                             googleMap.moveCamera(
                                 CameraUpdateFactory.newLatLngZoom(
-                                    pradita,
+                                    PeopleList.first().location,
                                     15f
                                 )
                             )
 
-                            // Add an OnMarkerClickListener
                             googleMap.setOnMarkerClickListener { marker ->
-                                if (marker == marker1 || marker == marker2) {
-                                    // Zoom in to the marker
+                                val data = markerToPeopleData[marker]
+                                if (data != null) {
                                     googleMap.animateCamera(
                                         CameraUpdateFactory.newLatLngZoom(
                                             marker.position,
                                             18f  // Change this value as needed
                                         )
                                     )
-
-                                    // Open the modal sheet
-                                    // You need to have a reference to your BottomSheetScaffoldState
                                     coroutineScope.launch {
                                         bottomSheetScaffoldState.bottomSheetState.expand()
+                                    }
+                                    selectedLocation.value = data.location
+                                    sheetContent.value = {
+                                        NewSheetContent(
+                                            profilePicture = data.profilePicture,
+                                            name = data.name,
+                                            distance = data.distance,
+                                            updatedTime = data.updatedTime,
+                                            status = data.status ?: "fine",
+                                            isNewSheetContent = isNewSheetContent,
+                                            selectedName = selectedName,
+                                            location = data.location,
+                                            selectedLocation = selectedLocation
+                                        )
                                     }
                                 }
                                 true
@@ -225,7 +224,12 @@ fun MapLocationScreen(
 }
 
 @Composable
-fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>, isNewSheetContent: MutableState<Boolean>) {
+fun MySheetContent(
+    sheetContent: MutableState<@Composable () -> Unit>,
+    isNewSheetContent: MutableState<Boolean>,
+    selectedName: MutableState<String>,
+    selectedLocation: MutableState<LatLng>
+) {
     Column(modifier = Modifier.heightIn(min = 100.dp, max = 350.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(
@@ -246,41 +250,54 @@ fun MySheetContent(sheetContent: MutableState<@Composable () -> Unit>, isNewShee
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 16.dp, bottom = 24.dp, top = 4.dp)
             )
-            Column(){
-                PeopleStatusRow(
-                    R.drawable.taylor_user,
-                    "Taylor Swift",
-                    "1.2 km away",
-                    "Updated on 09:15 PM",
-                    status = "fall",
-                    onClick = { status ->
-                        // Update the sheetContent state when this row is clicked
-                        sheetContent.value = { NewSheetContent(status, isNewSheetContent) }
+            Column() {
+                PeopleList.forEach { data ->
+                    PeopleStatusRow(
+                        profilePicture = data.profilePicture,
+                        name = data.name,
+                        distance = data.distance,
+                        updatedTime = data.updatedTime,
+                        status = data.status,
+                        location = data.location
+                    ) { profilePicture, name, distance, updatedTime, status, location ->
+                        sheetContent.value =
+                            {
+                                NewSheetContent(
+                                    profilePicture,
+                                    name,
+                                    distance,
+                                    updatedTime,
+                                    status,
+                                    isNewSheetContent,
+                                    selectedName,
+                                    location,
+                                    selectedLocation
+                                )
+                            }
                     }
-                )
-                PeopleStatusRow(
-                    R.drawable.david_hershey_user,
-                    "David Hershey",
-                    "5 m away",
-                    "Updated on 09:15 PM",
-                    "help"
-                )
-                PeopleStatusRow(R.drawable.delvin_user, "Delvin", "900 m away", "Updated on 09:05 PM", null)
-                PeopleStatusRow(R.drawable.player1_user, "Player1", "900 m away", "Updated on 09:05 PM", null)
-
+                }
             }
-
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
-
-
 }
 
 @Composable
-fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  { // Modify this line
+fun NewSheetContent(
+    profilePicture: Int,
+    name: String,
+    distance: String,
+    updatedTime: String,
+    status: String?,
+    isNewSheetContent: MutableState<Boolean>,
+    selectedName: MutableState<String>,
+    location: LatLng,
+    selectedLocation: MutableState<LatLng>
+) { // Modify this line
     isNewSheetContent.value = true
-    // This is the new content that will be shown when a PeopleStatusRow is clicked
+    selectedName.value = name
+    selectedLocation.value = location
+
     Column(modifier = Modifier.heightIn(min = 100.dp, max = 350.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
         Spacer(
@@ -305,9 +322,9 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.White)
-                ){
+                ) {
                     Image(
-                        painter = painterResource(R.drawable.david_hershey_user),
+                        painter = painterResource(profilePicture),
                         contentDescription = null,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -321,15 +338,15 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                         verticalArrangement = Arrangement.Top
                     ) {
                         Text(
-                            text = "David Hershey",
+                            text = name,
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            text = "750m ahead from You",
+                            text = distance,
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Text(
-                            text = "Updated on 09:15 PM",
+                            text = updatedTime,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -360,8 +377,6 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                         }
                     }
                 }
-
-
             }
             Column(
                 modifier = Modifier
@@ -369,14 +384,14 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                     .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             ) {
                 Text(
-                    text = "David is falling on 9:10 PM. Pick David up now!",
+                    text = "$name is falling on 9:10 PM. Pick $name up now!",
                     fontStyle = FontStyle.Italic,
                     style = MaterialTheme.typography.bodySmall,
                     color = Error50,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
                 Text(
-                    text ="David’s Latest Capture",
+                    text = "$name’s Latest Capture",
                     style = MaterialTheme.typography.titleSmall,
                     color = OnPrimaryContainer,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -428,7 +443,7 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                     }
                 }
                 Text(
-                    text ="David’s History Timeline",
+                    text = "$name's History Timeline",
                     style = MaterialTheme.typography.titleSmall,
                     color = OnPrimaryContainer,
                     modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
@@ -471,13 +486,12 @@ fun NewSheetContent(status: String, isNewSheetContent: MutableState<Boolean>)  {
                     )
                     Column(
                         modifier = Modifier
-                        .weight(0.8f)
+                            .weight(0.8f)
                     ) {
                         Text(
                             text = "Pradita University",
                             style = MaterialTheme.typography.labelMedium,
                             color = OnPrimaryContainer,
-//                            modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
                             text = "5:00 PM - 8:00 PM",

@@ -33,6 +33,8 @@ import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.okta.iottest.ui.theme.ErrorContainer
 import com.okta.iottest.ui.theme.OnErrorContainer
+import com.okta.iottest.ui.theme.SemanticBrown10
+import com.okta.iottest.ui.theme.SemanticBrown30
 import com.okta.iottest.ui.theme.SemanticRed30
 
 fun createBitmapWithBorder(drawableId: Int, context: Context, scaleFactor: Float = 1.5f, overlayDrawableId: Int, status : String?): Bitmap {
@@ -52,7 +54,7 @@ fun createBitmapWithBorder(drawableId: Int, context: Context, scaleFactor: Float
     val canvas = Canvas(bitmapWithBorder)
 
     // Set the color based on the status
-    val color = if (status == "Fall") SemanticRed30.toArgb() else Color.Gray.toArgb()
+    val color = if (status == "fall") SemanticRed30.toArgb() else if (status == "help") SemanticBrown30.toArgb() else Color.Gray.toArgb()
 
     // Draw the border
     val borderPaint = Paint().apply {
