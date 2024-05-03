@@ -241,12 +241,7 @@ fun SignupScreen(
             if (signupAttempted != null) {
                 LaunchedEffect(signupResponse.value) {
                     if (signupResponse.value) {
-                        Toast.makeText(context, "Successfully Updated", Toast.LENGTH_SHORT).show()
-//                        snackbarHostState.showSnackbar(
-//                            message = "Successfully registered",
-//                            actionLabel = "Continue",
-//                            duration = SnackbarDuration.Short
-//                        )
+                        Toast.makeText(context, "Signup Successful", Toast.LENGTH_SHORT).show()
 
                         signupAttempted = null  // Reset to null after showing the Snackbar
                         navController.navigate(Screen.Location.route) {
@@ -257,11 +252,6 @@ fun SignupScreen(
                         }
                     } else {
                         Toast.makeText(context, "Registration failed", Toast.LENGTH_SHORT).show()
-//                        snackbarHostState.showSnackbar(
-//                            message = "Registration failed",
-//                            actionLabel = "Retry",
-//                            duration = SnackbarDuration.Short
-//                        )
                         signupAttempted = null  // Reset to null after showing the Snackbar
                     }
                 }
