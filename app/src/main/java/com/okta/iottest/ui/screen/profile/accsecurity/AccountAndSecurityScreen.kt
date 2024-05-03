@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,12 +33,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +52,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.okta.iottest.R
 import com.okta.iottest.ui.components.BottomBar
 import com.okta.iottest.ui.navigation.Screen
@@ -58,8 +66,8 @@ fun AccountAndSecurityScreen(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val openDialog = remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -185,7 +193,9 @@ fun AccountAndSecurityScreen(
                         verticalAlignment = Alignment.Top,
                         modifier = modifier
                             .padding(top = 12.dp, bottom = 12.dp)
-                            .clickable {  }
+                            .clickable {
+                                openDialog.value = true
+                            }
                     ) {
                         Icon(
                             painter = rememberVectorPainter(image = Icons.Outlined.ExitToApp),
@@ -266,6 +276,44 @@ fun AccountAndSecurityScreen(
                             .height(1.dp)
                             .background(Color.Gray)
                     )
+
+                    if (openDialog.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                openDialog.value = false
+                            },
+                            title = {
+                                Text(text = "Logout")
+                            },
+                            text = {
+                                Text("Are you sure you want to logout?")
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        // Initialize Firebase Auth
+                                        val auth = FirebaseAuth.getInstance()
+
+                                        // Sign out
+                                        auth.signOut()
+
+                                        // Navigate to Welcome Screen
+                                        navController.navigate(Screen.Welcome.route) {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+
+
+                                        openDialog.value = false
+                                    }
+                                ) {
+                                    Text("Yes")
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

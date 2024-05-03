@@ -27,13 +27,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.okta.iottest.R
 import com.okta.iottest.ui.components.ImageSlider
+import com.okta.iottest.ui.navigation.Screen
 
 @Preview
 @Composable
 fun WelcomeScreen(
-//    navController: NavHostController = rememberNavController(),
+    navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
 ){
     val images = listOf(
@@ -63,13 +66,12 @@ fun WelcomeScreen(
         ImageSlider(images)
         Button(
             onClick = {
-//                    navController.navigate(Screen.Login.route){
-//                        popUpTo(Screen.Welcome.route) {
-//                            saveState = true
-//                        }
-//                        restoreState = true
-//                        launchSingleTop = true
-//                    }
+                    navController.navigate(Screen.Signup.route){
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
             },
             Modifier
                 .padding(top = 16.dp, start = 32.dp, end = 32.dp)
@@ -81,11 +83,10 @@ fun WelcomeScreen(
         }
         Button(
             onClick = {
-//                    navController.navigate(Screen.Signup.route) {
-//                        popUpTo(Screen.Welcome.route) { saveState = true }
-//                        restoreState = true
-//                        launchSingleTop = true
-//                    }
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
             },
             Modifier
                 .padding(top = 12.dp, start = 32.dp, end = 32.dp)

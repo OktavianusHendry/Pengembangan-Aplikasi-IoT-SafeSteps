@@ -1,5 +1,7 @@
 package com.okta.iottest.ui.screen.location
 
+import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -88,6 +90,11 @@ fun MapLocationScreen(
     val selectedName = remember { mutableStateOf("") } // Add this line
     val selectedLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
+    val context = LocalContext.current as Activity
+
+    BackHandler {
+        context.finish()
+    }
     // Update sheetContent to be MySheetContent(sheetContent)
     LaunchedEffect(Unit) {
         sheetContent.value = {
@@ -100,6 +107,7 @@ fun MapLocationScreen(
         } // Pass isNewSheetContent here
         isNewSheetContent.value = false // And this line
     }
+
 
     Scaffold(
         bottomBar = {

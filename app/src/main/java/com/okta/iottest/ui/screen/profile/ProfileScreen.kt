@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,27 +56,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberImagePainter
+import com.google.firebase.auth.FirebaseAuth
 import com.okta.iottest.R
 import com.okta.iottest.ui.components.BottomBar
 import com.okta.iottest.ui.navigation.Screen
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
-    var showDialog by remember { mutableStateOf(false) }
-    var dialogText by remember { mutableStateOf("") }
+    val viewModel: ProfileViewModel = viewModel()
+    val email by viewModel.email.collectAsState()
+    val name by viewModel.name.collectAsState()
+    val photoUrl by viewModel.photoUrl.collectAsState()
 
     Scaffold(
         bottomBar = {
-//            if (currentRoute != Screen.DetailReward.route) { //Change
             BottomBar(navController)
-//            }
         },
     ) { innerPadding ->
         Column(
@@ -93,43 +96,63 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = CenterVertically
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.welcome5),
-                            contentDescription = null,
-                            modifier = modifier
-                                .size(75.dp)
-                                .clip(shape = CircleShape)
-                                .aspectRatio(1f)
-                        )
-
-                        Spacer(modifier = Modifier.width(16.dp)) // Add this line
-
-                        Column {
-                            Text(
-                                text = "John Doe",
-                                style = TextStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                modifier = modifier.padding(bottom = 4.dp)
-                            )
-                            Text(
-                                text = "johndoe@gmail.com",
-                                style = TextStyle(
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp
-                                )
-                            )
-                        }
-
-                        Spacer(Modifier.weight(1f, true)) // Add this line
-
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(
-                                painter = painterResource(R.drawable.outline_mode_edit_outline_24),
+                        Row(Modifier.weight(0.9f)) {
+                            Image(
+                                painter = rememberImagePainter(data = photoUrl, builder = {
+                                    placeholder(R.drawable.welcome5)
+                                }),
                                 contentDescription = null,
+                                modifier = modifier
+                                    .size(75.dp)
+                                    .clip(shape = CircleShape)
+                                    .aspectRatio(1f)
                             )
+
+                            Spacer(modifier = Modifier.width(16.dp)) // Add this line
+
+                            Column {
+                                Text(
+                                    text = name,
+                                    style = TextStyle(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp
+                                    ),
+                                    modifier = modifier.padding(bottom = 4.dp)
+                                )
+                                Text(
+                                    text = email,
+                                    style = TextStyle(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp
+                                    )
+                                )
+                            }
+                            Spacer(Modifier.weight(1f, true)) // Add this line
                         }
+                        Row (Modifier.weight(0.1f)){
+                            IconButton(
+                                onClick = {
+                                    navController.navigate(Screen.EditProfile.route) {
+                                        popUpTo(Screen.Profile.route) {
+                                            saveState = true
+                                        }
+                                        restoreState = true
+                                        launchSingleTop = true
+                                    }
+                                },
+                                modifier = modifier
+                                    .size(24.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.outline_mode_edit_outline_24),
+                                    contentDescription = null,
+                                )
+                            }
+                        }
+
+
+
+
                     }
 
                     Spacer(modifier = modifier.height(16.dp))
@@ -137,7 +160,8 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable {
                                 navController.navigate(Screen.AccountAndSecurity.route) {
                                     popUpTo(Screen.Profile.route) {
@@ -191,7 +215,8 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable { /*TODO*/ },
                     ) {
                         Icon(
@@ -229,12 +254,13 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable {
                                 val intent = Intent(Settings.ACTION_LOCALE_SETTINGS)
                                 context.startActivity(intent)
                             },
-                    ){
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.global),
                             contentDescription = null
@@ -271,9 +297,10 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable { /*TODO*/ },
-                    ){
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.outline_live_help_24),
                             contentDescription = null
@@ -307,7 +334,8 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable {
                                 navController.navigate(Screen.TermsAndCondition.route) {
                                     popUpTo(Screen.Profile.route) {
@@ -317,7 +345,7 @@ fun ProfileScreen(
                                     launchSingleTop = true
                                 }
                             },
-                    ){
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.tnc_icon),
                             contentDescription = null
@@ -359,9 +387,10 @@ fun ProfileScreen(
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = CenterVertically,
-                        modifier = modifier.padding(vertical = 4.dp)
+                        modifier = modifier
+                            .padding(vertical = 4.dp)
                             .clickable {},
-                    ){
+                    ) {
                         Icon(
                             painter = rememberVectorPainter(image = Icons.Outlined.Star),
                             contentDescription = null

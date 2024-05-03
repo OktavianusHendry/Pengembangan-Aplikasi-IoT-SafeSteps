@@ -1,6 +1,9 @@
 package com.okta.iottest.ui.screen.signup
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,8 +22,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,16 +46,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.okta.iottest.R
 import com.okta.iottest.ui.components.EmailText
 import com.okta.iottest.ui.components.PasswordText
+import com.okta.iottest.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun SignupScreen(
-//    navController: NavHostController = rememberNavController(),
+    navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
     var isLoading by remember { mutableStateOf(false) }
@@ -63,13 +74,14 @@ fun SignupScreen(
     val isConfirmPasswordValid = inputConfirmPassword.length >= 8
     val openDialog = remember { mutableStateOf(false) }
     val signupResponse = remember { mutableStateOf(false) }
-//    val auth = FirebaseAuth.getInstance()
-
+    val auth = FirebaseAuth.getInstance()
+//    val snackbarHostState = remember { SnackbarHostState() }
+    var signupAttempted by remember { mutableStateOf<Boolean?>(null) }
+    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()){
         Column(modifier = Modifier.fillMaxWidth()) {
             Box(
-
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 8.dp)
                     .fillMaxHeight(0.1f)
@@ -171,19 +183,38 @@ fun SignupScreen(
             Button(
                 onClick = {
                     isLoading = true
-//                    auth.createUserWithEmailAndPassword(inputEmail, inputPassword)
-//                        .addOnCompleteListener { task ->
-//                            isLoading = false
-//                            if (task.isSuccessful) {
-//                                // User is successfully registered and logged in
-//                                openDialog.value = true
-//                                signupResponse.value = true
-//                            } else {
-//                                // Registration failed
-//                                openDialog.value = true
-//                                signupResponse.value = false
-//                            }
-//                        }
+                    auth.createUserWithEmailAndPassword(inputEmail, inputPassword)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                // User is successfully registered and logged in
+                                val user = auth.currentUser
+                                val profileUpdates = UserProfileChangeRequest.Builder()
+                                    .setDisplayName(inputNama)
+                                    .build()
+
+                                user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
+                                    isLoading = false
+                                    if (updateTask.isSuccessful) {
+                                        Log.d(TAG, "User profile updated.")
+                                        openDialog.value = true
+                                        signupResponse.value = true
+                                        signupAttempted = true
+                                    } else {
+                                        // Profile update failed
+                                        Log.w(TAG, "updateProfile:failure", updateTask.exception)
+                                        openDialog.value = true
+                                        signupResponse.value = false
+                                    }
+                                }
+
+                            } else {
+                                // Registration failed
+                                isLoading = false
+                                Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                                openDialog.value = true
+                                signupResponse.value = false
+                            }
+                        }
                 },
                 enabled = inputNama.isNotEmpty() && isEmailValid && inputEmail.isNotEmpty() && inputPassword.isNotEmpty() && inputConfirmPassword.isNotEmpty() && inputPassword == inputConfirmPassword,
                 modifier = Modifier
@@ -196,45 +227,44 @@ fun SignupScreen(
                     fontSize = 16.sp,
                 )
             }
-            if (openDialog.value) {
-                AlertDialog(
-                    onDismissRequest = {
-                        openDialog.value = false
-                    },
-                    title = {
-                        if (signupResponse.value) {
-                            Text("Success")
-                        } else {
-                            Text("Invalid")
-                        }
 
-                    },
-                    text = {
-                        if (signupResponse.value) {
-                            Text("Successfully registered")
-                        } else {
-                            Text("Registration failed")
-                        }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                if (signupResponse.value) {
-                                    openDialog.value = false
-//                                    navController.navigate(Screen.Home.route) {
-//                                        popUpTo(Screen.Welcome.route) { saveState = false }
-//                                        restoreState = true
-//                                        launchSingleTop = true
-//                                    }
-                                } else {
-                                    openDialog.value = false
-                                }
+//            LaunchedEffect(signupResponse.value) {
+//                if (signupResponse.value) {
+//                    navController.navigate(Screen.Location.route) {
+//                        popUpTo(Screen.Signup.route) {
+//                            inclusive = true
+//                        }
+//                        launchSingleTop = true
+//                    }
+//                }
+//            }
+            if (signupAttempted != null) {
+                LaunchedEffect(signupResponse.value) {
+                    if (signupResponse.value) {
+                        Toast.makeText(context, "Successfully Updated", Toast.LENGTH_SHORT).show()
+//                        snackbarHostState.showSnackbar(
+//                            message = "Successfully registered",
+//                            actionLabel = "Continue",
+//                            duration = SnackbarDuration.Short
+//                        )
+
+                        signupAttempted = null  // Reset to null after showing the Snackbar
+                        navController.navigate(Screen.Location.route) {
+                            popUpTo(Screen.Signup.route) {
+                                inclusive = true
                             }
-                        ) {
-                            Text("Continue")
+                            launchSingleTop = true
                         }
+                    } else {
+                        Toast.makeText(context, "Registration failed", Toast.LENGTH_SHORT).show()
+//                        snackbarHostState.showSnackbar(
+//                            message = "Registration failed",
+//                            actionLabel = "Retry",
+//                            duration = SnackbarDuration.Short
+//                        )
+                        signupAttempted = null  // Reset to null after showing the Snackbar
                     }
-                )
+                }
             }
         }
         if (isLoading) {

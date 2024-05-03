@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "271534501523",
+    "project_id": "safesteps-a2f96",
+    "storage_bucket": "safesteps-a2f96.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271534501523:android:bf86f37d8eda6c8338a766",
+        "android_client_info": {
+          "package_name": "com.okta.iottest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "271534501523-csm8c9qtmbifp8hfehv2pj2m32oba4ts.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.okta.iottest",
+            "certificate_hash": "2bd1f20371819767c4e58124b2780baf1ba31cd8"
+          }
+        },
+        {
+          "client_id": "271534501523-h36ufqjeudhh3b56qt3h0nd7t6tv3ehm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmy60jPWVqGxPrKbLdl5WHYQ-LEwkgIio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "271534501523-h36ufqjeudhh3b56qt3h0nd7t6tv3ehm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
