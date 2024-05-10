@@ -47,7 +47,7 @@ fun DeviceScreen(
     Scaffold (
         topBar = {
             TopAppBar(
-                title = { Text("Devices") },
+                title = { Text("Device") },
                 navigationIcon = {},
                 actions = {
                     // Add action icons here

@@ -11,6 +11,7 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.view.View
 import android.widget.ImageView
 import androidx.compose.foundation.Image
@@ -37,12 +38,19 @@ import com.okta.iottest.ui.theme.SemanticBrown10
 import com.okta.iottest.ui.theme.SemanticBrown30
 import com.okta.iottest.ui.theme.SemanticRed30
 
-fun createBitmapWithBorder(drawableId: Int, context: Context, scaleFactor: Float = 1.5f, overlayDrawableId: Int, status : String?): Bitmap {
+fun createBitmapWithBorder(drawableId: Any, context: Context, scaleFactor: Float = 1.5f, overlayDrawableId: Int, status : String?): Bitmap {
     // Get the original bitmap
-    val originalBitmap = (ContextCompat.getDrawable(context, drawableId) as BitmapDrawable).bitmap
+    val originalBitmap = when (drawableId) {
+        is Int -> (ContextCompat.getDrawable(context, drawableId) as BitmapDrawable).bitmap
+        is Uri -> {
+            val inputStream = context.contentResolver.openInputStream(drawableId)
+            BitmapFactory.decodeStream(inputStream)
+        }
+        else -> throw IllegalArgumentException("Invalid type for drawableId")
+    }
 
     // Scale the original bitmap
-    val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, (originalBitmap.width * 1.5f).toInt(), (originalBitmap.height * scaleFactor).toInt(), false)
+    val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, (originalBitmap.width * scaleFactor).toInt(), (originalBitmap.height * scaleFactor).toInt(), false)
 
     // Get the overlay bitmap
     val overlayBitmap = (ContextCompat.getDrawable(context, overlayDrawableId) as BitmapDrawable).bitmap

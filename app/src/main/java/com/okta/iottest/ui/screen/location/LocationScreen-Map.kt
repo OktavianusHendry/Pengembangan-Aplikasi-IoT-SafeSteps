@@ -1,6 +1,7 @@
 package com.okta.iottest.ui.screen.location
 
 import android.app.Activity
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -66,6 +67,7 @@ import com.okta.iottest.ui.theme.Error50
 import com.okta.iottest.ui.theme.ErrorContainer
 import com.okta.iottest.ui.theme.SemanticBrown10
 import androidx.compose.ui.text.font.FontStyle
+import coil.compose.rememberImagePainter
 import com.google.android.gms.maps.model.Marker
 import com.okta.iottest.model.PeopleData
 import com.okta.iottest.model.PeopleList
@@ -84,7 +86,6 @@ fun MapLocationScreen(
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Initialize sheetContent with an empty composable
     val sheetContent = remember { mutableStateOf<@Composable () -> Unit>({}) }
     val isNewSheetContent = remember { mutableStateOf(false) } // Add this line
     val selectedName = remember { mutableStateOf("") } // Add this line
@@ -162,57 +163,62 @@ fun MapLocationScreen(
                         mapView.getMapAsync { googleMap ->
                             val markerToPeopleData = mutableMapOf<Marker, PeopleData>()
                             PeopleList.forEach { data ->
-                                val bitmapWithBorder = createBitmapWithBorder(
-                                    data.profilePicture,
-                                    context,
-                                    1.5f,
-                                    data.statusIcon,
-                                    data.status
-                                )
-                                val markerIcon =
-                                    BitmapDescriptorFactory.fromBitmap(bitmapWithBorder)
+                                data.location?.let { location -> // Check if location is not null
+                                    val bitmapWithBorder = createBitmapWithBorder(
+                                        data.profilePicture,
+                                        context,
+                                        1.5f,
+                                        data.statusIcon!!,
+                                        data.status,
+                                    )
+                                    val markerIcon = BitmapDescriptorFactory.fromBitmap(bitmapWithBorder)
 
-                                val marker = googleMap.addMarker(
-                                    MarkerOptions()
-                                        .position(data.location)
-                                        .title("${data.name} at ${data.location}")
-                                        .snippet(data.status)
-                                        .icon(markerIcon)
-                                )
-                                markerToPeopleData[marker!!] = data
+                                    val marker = googleMap.addMarker(
+                                        MarkerOptions()
+                                            .position(location) // Use the non-null location
+                                            .title("${data.name} at $location")
+                                            .snippet(data.status)
+                                            .icon(markerIcon)
+                                    )
+                                    markerToPeopleData[marker!!] = data
+                                }
                             }
-                            googleMap.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(
-                                    PeopleList.first().location,
-                                    15f
+                            PeopleList.firstOrNull { it.location != null }?.let { data ->
+                                googleMap.moveCamera(
+                                    CameraUpdateFactory.newLatLngZoom(
+                                        data.location!!,
+                                        15f
+                                    )
                                 )
-                            )
+                            }
 
                             googleMap.setOnMarkerClickListener { marker ->
                                 val data = markerToPeopleData[marker]
                                 if (data != null) {
-                                    googleMap.animateCamera(
-                                        CameraUpdateFactory.newLatLngZoom(
-                                            marker.position,
-                                            18f  // Change this value as needed
+                                    data.location?.let { location -> // Check if location is not null
+                                        googleMap.animateCamera(
+                                            CameraUpdateFactory.newLatLngZoom(
+                                                location, // Use the non-null location
+                                                18f  // Change this value as needed
+                                            )
                                         )
-                                    )
-                                    coroutineScope.launch {
-                                        bottomSheetScaffoldState.bottomSheetState.expand()
-                                    }
-                                    selectedLocation.value = data.location
-                                    sheetContent.value = {
-                                        NewSheetContent(
-                                            profilePicture = data.profilePicture,
-                                            name = data.name,
-                                            distance = data.distance,
-                                            updatedTime = data.updatedTime,
-                                            status = data.status ?: "fine",
-                                            isNewSheetContent = isNewSheetContent,
-                                            selectedName = selectedName,
-                                            location = data.location,
-                                            selectedLocation = selectedLocation
-                                        )
+                                        coroutineScope.launch {
+                                            bottomSheetScaffoldState.bottomSheetState.expand()
+                                        }
+                                        selectedLocation.value = location // Use the non-null location
+                                        sheetContent.value = {
+                                            NewSheetContent(
+                                                profilePicture = data.profilePicture,
+                                                name = data.name,
+                                                distance = data.distance,
+                                                updatedTime = data.updatedTime,
+                                                status = data.status ?: "fine",
+                                                isNewSheetContent = isNewSheetContent,
+                                                selectedName = selectedName,
+                                                location = location, // Use the non-null location
+                                                selectedLocation = selectedLocation
+                                            )
+                                        }
                                     }
                                 }
                                 true
@@ -260,31 +266,34 @@ fun MySheetContent(
             )
             Column() {
                 PeopleList.forEach { data ->
-                    PeopleStatusRow(
-                        profilePicture = data.profilePicture,
-                        name = data.name,
-                        distance = data.distance,
-                        updatedTime = data.updatedTime,
-                        status = data.status,
-                        location = data.location
-                    ) { profilePicture, name, distance, updatedTime, status, location ->
-                        sheetContent.value =
-                            {
-                                NewSheetContent(
-                                    profilePicture,
-                                    name,
-                                    distance,
-                                    updatedTime,
-                                    status,
-                                    isNewSheetContent,
-                                    selectedName,
-                                    location,
-                                    selectedLocation
-                                )
-                            }
+                    data.location?.let { location -> // Check if location is not null
+                        PeopleStatusRow(
+                            profilePicture = data.profilePicture,
+                            name = data.name,
+                            distance = data.distance,
+                            updatedTime = data.updatedTime,
+                            status = data.status,
+                            location = location // Use the non-null location
+                        ) { profilePicture, name, distance, updatedTime, status, location ->
+                            sheetContent.value =
+                                {
+                                    NewSheetContent(
+                                        profilePicture,
+                                        name,
+                                        distance,
+                                        updatedTime,
+                                        status,
+                                        isNewSheetContent,
+                                        selectedName,
+                                        location,
+                                        selectedLocation
+                                    )
+                                }
+                        }
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
@@ -292,7 +301,7 @@ fun MySheetContent(
 
 @Composable
 fun NewSheetContent(
-    profilePicture: Int,
+    profilePicture: Any ,
     name: String,
     distance: String,
     updatedTime: String,
@@ -305,6 +314,8 @@ fun NewSheetContent(
     isNewSheetContent.value = true
     selectedName.value = name
     selectedLocation.value = location
+
+    val peopleData = PeopleList.find { it.name == name }
 
     Column(modifier = Modifier.heightIn(min = 100.dp, max = 350.dp)) {
         Spacer(modifier = Modifier.height(12.dp))
@@ -331,16 +342,20 @@ fun NewSheetContent(
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.White)
                 ) {
-                    Image(
-                        painter = painterResource(profilePicture),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .size(60.dp)
-                    )
+                    when (profilePicture) {
+                        is Int -> {
+                            // Load drawable resource
+                            Image(painter = painterResource(id = profilePicture), contentDescription = null, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(60.dp))
+                        }
+                        is Uri -> {
+                            // Load image from Uri
+                            Image(painter = rememberImagePainter(data = profilePicture), contentDescription = null, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(60.dp))
+                        }
+                    }
+
                     Column(
                         modifier = Modifier
-                            .weight(0.7f)
+                            .weight(0.8f)
                             .padding(start = 16.dp),
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.Top
@@ -354,14 +369,14 @@ fun NewSheetContent(
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Text(
-                            text = updatedTime,
+                            text = "Last online on $updatedTime",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
                     Row(
                         horizontalArrangement = Arrangement.End,
                         modifier = Modifier
-                            .weight(0.3f)
+                            .weight(0.2f)
                             .align(Alignment.CenterVertically)
                     ) {
                         if (status == "fall") {
@@ -392,7 +407,7 @@ fun NewSheetContent(
                     .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             ) {
                 Text(
-                    text = "$name is falling on 9:10 PM. Pick $name up now!",
+                    text = "$name is falling on $updatedTime. Pick $name up now!",
                     fontStyle = FontStyle.Italic,
                     style = MaterialTheme.typography.bodySmall,
                     color = Error50,
@@ -409,7 +424,7 @@ fun NewSheetContent(
                 ) {
                     Box {
                         Image(
-                            painter = painterResource(R.drawable.foto1),
+                            painter = painterResource(R.drawable.pic_sqp),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -430,7 +445,7 @@ fun NewSheetContent(
                     }
                     Box {
                         Image(
-                            painter = painterResource(R.drawable.foto1),
+                            painter = painterResource(R.drawable.pic_prdt),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -462,50 +477,29 @@ fun NewSheetContent(
                     color = OnPrimaryContainer,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Row() {
-                    Image(
-                        painter = painterResource(R.drawable.loc_history_icon),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .weight(0.2f)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(0.8f)
-                    ) {
-                        Text(
-                            text = "Scientia Square Park",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = OnPrimaryContainer,
+                peopleData?.history?.zip(peopleData.historyTime) { location, time ->
+                    Row() {
+                        Image(
+                            painter = painterResource(R.drawable.loc_history_icon),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(0.2f)
                         )
-                        Text(
-                            text = "8:00 PM - Now",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = OnPrimaryContainer,
-                        )
-                    }
-                }
-                Row() {
-                    Image(
-                        painter = painterResource(R.drawable.loc_history_icon),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .weight(0.2f)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(0.8f)
-                    ) {
-                        Text(
-                            text = "Pradita University",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = OnPrimaryContainer,
-                        )
-                        Text(
-                            text = "5:00 PM - 8:00 PM",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = OnPrimaryContainer,
-                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(0.8f)
+                        ) {
+                            Text(
+                                text = location,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = OnPrimaryContainer,
+                            )
+                            Text(
+                                text = time,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = OnPrimaryContainer,
+                            )
+                        }
                     }
                 }
             }

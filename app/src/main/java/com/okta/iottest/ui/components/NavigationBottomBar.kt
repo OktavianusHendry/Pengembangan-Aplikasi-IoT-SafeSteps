@@ -106,7 +106,7 @@ fun CustomNavigationBarItem(
             .height(64.dp)
             .padding(
                 top = 10.dp,
-                start = 16.dp,
+                start = if (isFirstItem) 16.dp else 4.dp,
                 bottom = 10.dp,
                 end = if (isLastItem) 16.dp else 0.dp
             )
@@ -120,6 +120,16 @@ fun CustomNavigationBarItem(
                     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                     mapIntent.setPackage("com.google.android.apps.maps")
                     context.startActivity(mapIntent)
+                } else if (label == "Share") {
+                    val gmmIntentUri = Uri.parse("https://google.co.id/maps/@${location.latitude},${location.longitude}?q=${location.latitude},${location.longitude}")
+                    val sendIntent: Intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "Check out this location on Google Maps: $gmmIntentUri")
+                        type = "text/plain"
+                    }
+
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
                 }
 
             },

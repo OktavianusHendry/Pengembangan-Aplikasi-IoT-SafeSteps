@@ -183,6 +183,7 @@ fun EditProfileScreen(
                                 placeholder(R.drawable.welcome5)
                             }),
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(85.dp)
                                 .clip(shape = CircleShape)
