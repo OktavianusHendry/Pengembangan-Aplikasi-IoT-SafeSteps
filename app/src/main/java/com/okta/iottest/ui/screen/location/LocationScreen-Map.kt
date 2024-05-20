@@ -48,30 +48,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberImagePainter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
 import com.okta.iottest.R
+import com.okta.iottest.model.PeopleData
+import com.okta.iottest.model.PeopleList
+import com.okta.iottest.model.TestData
 import com.okta.iottest.ui.components.BottomBar
+import com.okta.iottest.ui.components.NavigationBottomBar
 import com.okta.iottest.ui.components.PeopleStatusRow
 import com.okta.iottest.ui.components.createBitmapWithBorder
 import com.okta.iottest.ui.theme.Error50
-import com.okta.iottest.ui.theme.ErrorContainer
-import com.okta.iottest.ui.theme.SemanticBrown10
-import androidx.compose.ui.text.font.FontStyle
-import coil.compose.rememberImagePainter
-import com.google.android.gms.maps.model.Marker
-import com.okta.iottest.model.PeopleData
-import com.okta.iottest.model.PeopleList
-import com.okta.iottest.ui.components.NavigationBottomBar
 import com.okta.iottest.ui.theme.OnPrimaryContainer
 import com.okta.iottest.ui.theme.PrimaryContainer
 import kotlinx.coroutines.launch
@@ -81,6 +85,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapLocationScreen(
     navController: NavHostController = rememberNavController(),
+//    locationMapScreenViewModel: LocationMapScreenViewModel = viewModel(),
     modifier: Modifier = Modifier,
 ) {
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState()
@@ -92,7 +97,7 @@ fun MapLocationScreen(
     val selectedLocation = remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
     val context = LocalContext.current as Activity
-
+//    val peopleList by LocationMapScreenViewModel.p
     BackHandler {
         context.finish()
     }
@@ -109,6 +114,15 @@ fun MapLocationScreen(
         isNewSheetContent.value = false // And this line
     }
 
+
+
+//    LaunchedEffect(data.value) {
+//        val dimasUser = PeopleList.find { it.name == "Budi" }
+//        if (dimasUser != null && data.value != null) {
+//            val updatedUser = dimasUser.copy(location = LatLng(data.value!!.location!!.latitude.toDouble(), data.value!!.location!!.longitude.toDouble()))
+//            PeopleList[PeopleList.indexOf(dimasUser)] = updatedUser
+//        }
+//    }
 
     Scaffold(
         bottomBar = {
@@ -345,11 +359,15 @@ fun NewSheetContent(
                     when (profilePicture) {
                         is Int -> {
                             // Load drawable resource
-                            Image(painter = painterResource(id = profilePicture), contentDescription = null, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(60.dp))
+                            Image(painter = painterResource(id = profilePicture), contentDescription = null, modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .size(60.dp))
                         }
                         is Uri -> {
                             // Load image from Uri
-                            Image(painter = rememberImagePainter(data = profilePicture), contentDescription = null, modifier = Modifier.clip(RoundedCornerShape(8.dp)).size(60.dp))
+                            Image(painter = rememberImagePainter(data = profilePicture), contentDescription = null, modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .size(60.dp))
                         }
                     }
 
@@ -406,70 +424,39 @@ fun NewSheetContent(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             ) {
-                Text(
-                    text = "$name is falling on $updatedTime. Pick $name up now!",
-                    fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Error50,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                Text(
-                    text = "$name’s Latest Capture",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = OnPrimaryContainer,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState())
-                ) {
-                    Box {
-                        Image(
-                            painter = painterResource(R.drawable.pic_sqp),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .width(250.dp)
-                                .height(125.dp)
-                                .align(Center)
-                                .clip(RoundedCornerShape(16.dp))
-                                .padding(end = 8.dp)
-                        )
-                        Text(
-                            text = "15 April 2024, 9:00 PM",
-                            modifier = Modifier
-                                .align(BottomStart)
-                                .clip(RoundedCornerShape(bottomStart = 16.dp))
-                                .background(PrimaryContainer)
-                                .padding(4.dp)
-                        )
-                    }
-                    Box {
-                        Image(
-                            painter = painterResource(R.drawable.pic_prdt),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .width(250.dp)
-                                .height(125.dp)
-                                .align(Center)
-                                .clip(RoundedCornerShape(16.dp))
-                                .padding(end = 8.dp)
-                        )
-                        Text(
-                            text = "15 April 2024, 9:00 PM",
-                            modifier = Modifier
-                                .align(BottomStart)
-                                .clip(RoundedCornerShape(bottomStart = 16.dp))
-                                .background(PrimaryContainer)
-                                .padding(4.dp)
-                        )
+//                Text(
+//                    text = "$name is falling on $updatedTime. Pick $name up now!",
+//                    fontStyle = FontStyle.Italic,
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = Error50,
+//                    modifier = Modifier.padding(bottom = 12.dp)
+//                )
+                if (status == "fall") {
+                    Text(
+                        text = "$name is falling on $updatedTime. Pick $name up now!",
+                        fontStyle = FontStyle.Italic,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Error50,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                } else if (status == "help") {
+                    Text(
+                        text = "$name is asking for help on $updatedTime. Pick $name up now!",
+                        fontStyle = FontStyle.Italic,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Error50,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                } else {
+                    Box(modifier = Modifier.size(0.dp)) {
+                        // No image is shown
                     }
                 }
                 Text(
                     text = "$name's History Timeline",
                     style = MaterialTheme.typography.titleSmall,
                     color = OnPrimaryContainer,
-                    modifier = Modifier.padding(bottom = 8.dp, top = 16.dp)
+                    modifier = Modifier.padding(bottom = 8.dp, top = 4.dp)
                 )
                 Text(
                     text = "Today",

@@ -39,7 +39,7 @@ val PeopleList = mutableListOf(
         updatedTime = "09:15 PM",
         status = "help",
         statusIcon = R.drawable.help_icon,
-        location = LatLng(-6.260826, 106.618281),
+        location = null,
         history = listOf("Pradita University", "Scientia Square Park"),
         historyTime = listOf("03:00 PM - Now", "12:00 PM - 03:00 PM")
     ),

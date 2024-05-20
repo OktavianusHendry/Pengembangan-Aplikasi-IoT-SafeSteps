@@ -1,16 +1,24 @@
 package com.okta.iottest
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -31,8 +41,17 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.firestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.okta.iottest.model.PeopleList
+import com.okta.iottest.model.TestData
 import com.okta.iottest.ui.navigation.Screen
 import com.okta.iottest.ui.screen.device.AddDeviceScreen
 import com.okta.iottest.ui.screen.device.RegisteredDeviceScreen
@@ -50,9 +69,46 @@ import com.okta.iottest.ui.theme.IoTtestTheme
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
 
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+//                Toast.makeText(this, "Notifications permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Notifications permission rejected", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= 33) {
+            requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+            val token = task.result
+
+            // Log and toast
+            Log.d(TAG, "FCM Registration token: $token")
+//            Toast.makeText(baseContext, "FCM Registration token: $token", Toast.LENGTH_SHORT).show()
+        }
+
+            val notificationChannel= NotificationChannel(
+                "notification_channel_id",
+                "Help",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val notificationManager=getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(notificationChannel)
+
 
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         installSplashScreen()
@@ -74,6 +130,69 @@ class MainActivity : ComponentActivity() {
                             // Navigate to Welcome Screen
                             navController.navigate(Screen.Welcome.route)
                         }
+                    }
+
+                    val data = remember { mutableStateOf<TestData?>(null) }
+                    LaunchedEffect(Unit) {
+                        val db = Firebase.database
+                        val ref = db.getReference("test")
+                        val firestore = Firebase.firestore
+                        val notificationHistoryRef = firestore.collection("notificationHistory")
+                        ref.addValueEventListener(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                val newData = snapshot.getValue(TestData::class.java)
+                                data.value = newData
+
+                                val budiUser = PeopleList.find { it.name == "Budi" }
+                                if (budiUser != null && newData != null) {
+                                    val updatedUser = budiUser.copy(
+                                        location = LatLng(
+                                            newData.location!!.latitude.toDouble(),
+                                            newData.location!!.longitude.toDouble()
+                                        )
+                                    )
+                                    PeopleList[PeopleList.indexOf(budiUser)] = updatedUser
+                                }
+
+                                if (newData!!.jerk!!.total > 560000f) {
+                                    // If so, send a notification
+                                    Log.d(TAG, "Budi is falling")
+                                    val notification = NotificationCompat.Builder(
+                                        this@MainActivity,
+                                        "notification_channel_id"
+                                    )
+                                        .setContentTitle("Help")
+                                        .setContentText("Budi is falling")
+                                        .setSmallIcon(R.drawable.safesteps_logo)
+                                        .setAutoCancel(true)
+                                        .build()
+                                    notificationManager.notify(1, notification)
+
+
+                                    // Store notification in Firestore
+                                    val notificationData = hashMapOf(
+                                        "title" to "Budi has Fallen Recently",
+                                        "message" to "Check Budi condition and where Budi is now!",
+                                        "timestamp" to FieldValue.serverTimestamp()
+                                    )
+                                    notificationHistoryRef.add(notificationData)
+                                        .addOnSuccessListener { documentReference ->
+                                            Log.d(
+                                                TAG,
+                                                "Notification stored with ID: ${documentReference.id}"
+                                            )
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.w(TAG, "Error adding notification to history", e)
+                                        }
+//                                    sendNotification(remoteMessage.notification?.title, "Budi is falling")
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                // Handle error here
+                            }
+                        })
                     }
 
                     val context = LocalContext.current
@@ -163,5 +282,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }
